@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jogo de Desviar de Objetos</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        #jogo {
+            width: 100%;
+            height: 100vh;
+            background-color: black;
+            position: relative;
+        }
+        #personagem {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .objeto {
+            width: 20px;
+            height: 20px;
+            background-color: blue;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <div id="jogo">
+        <div id="personagem"></div>
+    </div>
+
+    <script>
+        const jogo = document.getElementById("jogo");
+        const personagem = document.getElementById("personagem");
+
+        let pontuacao = 0;
+
+        function criarObjeto() {
+            const objeto = document.createElement("div");
+            objeto.className = "objeto";
+            objeto.style.left = Math.random() * (jogo.clientWidth - 20) + "px";
+            jogo.appendChild(objeto);
+
+            const animacao = objeto.animate([
+                { top: "0", opacity: 1 },
+                { top: jogo.clientHeight + "px", opacity: 0 }
+            ], {
+                duration: 3000,
+                easing: "linear"
+            });
+
+            animacao.onfinish = () => {
+                jogo.removeChild(objeto);
+                pontuacao++;
+            };
+
+            animacao.oncancel = () => {
+                jogo.removeChild(objeto);
+            };
+        }
+
+        function moverPersonagem(event) {
+            const limiteEsquerdo = jogo.offsetLeft;
+            const limiteDireito = jogo.offsetLeft + jogo.clientWidth;
+            const tecla = event.key;
+
+            if (tecla === "ArrowLeft" && personagem.offsetLeft > limiteEsquerdo) {
+                personagem.style.left = personagem.offsetLeft - 10 + "px";
+            } else if (tecla === "ArrowRight" && personagem.offsetLeft < limiteDireito - personagem.clientWidth) {
+                personagem.style.left = personagem.offsetLeft + 10 + "px";
+            }
+        }
+
+        setInterval(criarObjeto, 1000);
+        document.addEventListener("keydown", moverPersonagem);
+
+        // Atualiza a pontuação na tela
+        function atualizarPontuacao() {
+            document.body.innerHTML = `<h1>Pontuação: ${pontuacao}</h1>`;
+        }
+
+        // Verifica a colisão entre o personagem e os objetos
+        function verificarColisao() {
+            const personagemRect = personagem.getBoundingClientRect();
+            const objetos = document.querySelectorAll(".objeto");
+
+            objetos.forEach(objeto => {
+                const objetoRect = objeto.getBoundingClientRect();
+                if (
+                    personagemRect.left < objetoRect.right &&
+                    personagemRect.right > objetoRect.left &&
+                    personagemRect.top < objetoRect.bottom &&
+                    personagemRect.bottom > objetoRect.top
+                ) {
+                    // Colisão detectada
+                    clearInterval(intervalID);
+                    atualizarPontuacao();
+                }
+            });
+        }
+
+        // Verifica a colisão a cada 100ms
+        const intervalID = setInterval(verificarColisao, 100);
+    </script>
+</body>
+</html>
